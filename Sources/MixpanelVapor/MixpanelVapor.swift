@@ -27,6 +27,11 @@ private struct AnyContent: Content {
 public struct MixpanelConfiguration {
     public var projectId: String
     public var authorization: BasicAuthorization
+    
+    public init(projectId: String, authorization: BasicAuthorization) {
+        self.projectId = projectId
+        self.authorization = authorization
+    }
 }
 
 final class Mixpanel {
