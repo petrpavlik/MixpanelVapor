@@ -24,10 +24,19 @@ private struct AnyContent: Content {
     }
 }
 
+/// Auth params to configure your Mixpanel instance with
 public struct MixpanelConfiguration {
+    
+    /// The project id you with to be logging events to.
     public var projectId: String
+    
+    /// Username and password of the service account you with to use to authenticate.
     public var authorization: BasicAuthorization
     
+    /// Initializer
+    /// - Parameters:
+    ///   - projectId: The project id you with to be logging events to.
+    ///   - authorization: Username and password of the service account you with to use to authenticate.
     public init(projectId: String, authorization: BasicAuthorization) {
         self.projectId = projectId
         self.authorization = authorization
@@ -93,6 +102,10 @@ final class Mixpanel {
 }
 
 public extension Application {
+    
+    /// Access mixpanel
+    ///
+    /// You can also use `request.mixpanel` when logging within a route handler.
     var mixpanel: MixpanelClient {
         .init(application: self, request: nil)
     }
@@ -114,9 +127,10 @@ public extension Application {
             }
         }
 
-        private var client: Mixpanel {
+        private var client: Mixpanel? {
             guard let configuration else {
-                fatalError("MixpanelVapor not configured. Use app.vapor.configuration = ...")
+                (request?.logger ?? application.logger).error("MixpanelVapor not configured. Use app.mixpanel.configuration = ...")
+                return nil
             }
             
             // This should not be necessary.
@@ -125,13 +139,18 @@ public extension Application {
                          configuration: configuration)
         }
         
+        /// Track an event to mixpanel
+        /// - Parameters:
+        ///   - name: The name of the event
+        ///   - params: Optional custom params assigned to the event
         public func track(name: String, params: [String: any Content] = [:]) async {
-            await client.track(name: name, params: params)
+            await client?.track(name: name, params: params)
         }
     }
 }
 
 public extension Request {
+    /// Access mixpanel
     var mixpanel: Application.MixpanelClient {
         .init(application: application, request: self)
     }

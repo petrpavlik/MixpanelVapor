@@ -2,10 +2,16 @@ import XCTest
 @testable import MixpanelVapor
 
 final class MixpanelVaporTests: XCTestCase {
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-//        XCTAssertEqual(MixpanelVapor().text, "Hello, World!")
+    
+    func testTrackEventWithInvalidAuth() async {
+        // TODO: implement it
+    }
+    
+    func testTrackEvent() async {
+        // TODO: implement it
+    }
+    
+    func testTrackEventWithParams() async {
+        // TODO: implement it
     }
 }
