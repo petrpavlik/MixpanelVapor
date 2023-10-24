@@ -28,7 +28,7 @@ public func configure(_ app: Application) throws {
 await application.mixpanel.track(name: "my_event", params: ["a": 123])
 await request.mixpanel.track(name: "my_event", params: ["a": 123])
 // enhances the metadata by parsing the headers and ip from the request
-await request.mixpanel.track(name: "my_event", reqeust: request, params: ["a": 123])
+await request.mixpanel.track(name: "my_event", request: request, params: ["a": 123])
 ```
 
 I'm only implemented very basic feature set that fits my needs at this point. Will extend this package as I have the need for it, but contributions are very welcome.
