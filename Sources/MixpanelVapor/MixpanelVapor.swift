@@ -7,6 +7,7 @@
 
 import Foundation
 import Vapor
+import UAParserSwift
 
 private struct AnyContent: Content {
 
@@ -56,13 +57,37 @@ final class Mixpanel {
         self.configuration = configuration
     }
     
-    func track(name: String, params: [String: any Content]) async {
+    func track(name: String, request: Request?, params: [String: any Content]) async {
         
         var properties: [String: any Content] = [
             "time": Int(Date().timeIntervalSince1970 * 1000),
             "$insert_id": UUID().uuidString,
             "distinct_id": ""
         ]
+        
+        if let request {
+            // https://docs.mixpanel.com/docs/tracking/how-tos/effective-server-side-tracking
+            
+            if let ip = request.peerAddress?.ipAddress {
+                properties["ip"] = ip
+            }
+            
+            if let userAgentHeader = request.headers[.userAgent].first {
+                let parser = UAParser(agent: userAgentHeader)
+                
+                if let browser = parser.browser?.name {
+                    properties["$browser"] = browser
+                }
+                
+                if let device = parser.device?.vendor {
+                    properties["$device"] = device
+                }
+                
+                if let os = parser.os?.name {
+                    properties["$os"] = os
+                }
+            }
+        }
         
         properties.merge(params) { current, _ in
             current
@@ -142,9 +167,10 @@ public extension Application {
         /// Track an event to mixpanel
         /// - Parameters:
         ///   - name: The name of the event
+        ///   - request: You can optionally pass request to automatically parse the ip address and user-agent header
         ///   - params: Optional custom params assigned to the event
-        public func track(name: String, params: [String: any Content] = [:]) async {
-            await client?.track(name: name, params: params)
+        public func track(name: String, request: Request? = nil, params: [String: any Content] = [:]) async {
+            await client?.track(name: name, request: request, params: params)
         }
     }
 }
