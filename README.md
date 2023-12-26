@@ -25,11 +25,11 @@ public func configure(_ app: Application) throws {
 
 ## Usage
 ```swift
-await application.mixpanel.track(name: "my_event", params: ["distinct_id": profile.id, "a": 123])
-await request.mixpanel.track(name: "my_event", params: ["distinct_id": profile.id, "a": 123])
+await application.mixpanel.track(name: "my_event", params: ["$user_id": profile.id, "a": 123])
+await request.mixpanel.track(name: "my_event", params: ["$user_id": profile.id, "a": 123])
 
 // enhances the metadata (user agent, country, ...) by parsing the headers and ip from the request
-await request.mixpanel.track(name: "my_event", request: request, params: ["distinct_id": profile.id, "a": 123])
+await request.mixpanel.track(name: "my_event", request: request, params: ["$user_id": profile.id, "a": 123])
 ```
 
 A list of mixpanel properties to assign a name, email, and other properties to a mixpanel identity can be found [here](https://docs.mixpanel.com/docs/data-structure/user-profiles#reserved-user-properties).
