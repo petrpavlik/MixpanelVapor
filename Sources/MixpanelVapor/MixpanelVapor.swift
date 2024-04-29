@@ -89,8 +89,8 @@ final class Mixpanel {
             }
         }
         
-        properties.merge(params) { current, _ in
-            current
+        properties.merge(params) { _ , new in
+            new
         }
         
         struct Event: Content {
