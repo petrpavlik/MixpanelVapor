@@ -9,38 +9,19 @@ import Foundation
 import Vapor
 import UAParserSwift
 
-private struct AnyContent: Content {
-
-    private let _encode: (Encoder) throws -> Void
-    public init<T: Encodable>(_ wrapped: T) {
-        _encode = wrapped.encode
-    }
-
-    func encode(to encoder: Encoder) throws {
-        try _encode(encoder)
-    }
-    
-    init(from decoder: Decoder) throws {
-        fatalError("we don't need this")
-    }
-}
-
 /// Auth params to configure your Mixpanel instance with
 public struct MixpanelConfiguration {
+
+    /// your project token
+    public var token: String
     
-    /// The project id you with to be logging events to.
-    public var projectId: String
+    /// Allow you to point to mixpanel's EU-based servers, or a mock server. Default value is `https://api.mixpanel.com`.
+    public var apiUrl = URL(string: "https://api.mixpanel.com")!
     
-    /// Username and password of the service account you with to use to authenticate.
-    public var authorization: BasicAuthorization
-    
-    /// Initializer
-    /// - Parameters:
-    ///   - projectId: The project id you with to be logging events to.
-    ///   - authorization: Username and password of the service account you with to use to authenticate.
-    public init(projectId: String, authorization: BasicAuthorization) {
-        self.projectId = projectId
-        self.authorization = authorization
+    /// Initializes an instance of the API with the given project token.
+    /// - Parameter token: your project token
+    public init(token: String) {
+        self.token = token
     }
 }
 
@@ -48,7 +29,6 @@ final class Mixpanel {
     
     private let client: Client
     private let logger: Logger
-    private let apiUrl = "https://api.mixpanel.com"
     private let configuration: MixpanelConfiguration
     
     init(client: Client, logger: Logger, configuration: MixpanelConfiguration) {
@@ -56,13 +36,14 @@ final class Mixpanel {
         self.logger = logger
         self.configuration = configuration
     }
-    
-    func track(name: String, request: Request?, params: [String: any Content]) async {
+        
+    func track(distinctId: String?, name: String, request: Request?, params: [String: any Content]) async {
         
         var properties: [String: any Content] = [
             "time": Int(Date().timeIntervalSince1970 * 1000),
             "$insert_id": UUID().uuidString,
-            "distinct_id": ""
+            "distinct_id": distinctId ?? "",
+            "token": configuration.token
         ]
         
         if let request {
@@ -108,10 +89,7 @@ final class Mixpanel {
         let event = Event(event: name, properties: properties)
                 
         do {
-            let response = try await client.post(URI(string: apiUrl + "/import?strict=1&project_id=\(configuration.projectId)")) { req in
-                                
-                req.headers.basicAuthorization = configuration.authorization
-
+            let response = try await client.post(URI(string: configuration.apiUrl.absoluteString + "/track")) { req in
                 req.headers.contentType = .json
                 
                 try req.content.encode([event])
@@ -124,61 +102,82 @@ final class Mixpanel {
             logger.report(error: error)
         }
     }
-}
-
-public extension Application {
     
-    /// Access mixpanel
-    ///
-    /// You can also use `request.mixpanel` when logging within a route handler.
-    var mixpanel: MixpanelClient {
-        .init(application: self, request: nil)
-    }
-
-    struct MixpanelClient {
-        let application: Application
-        let request: Request?
-
-        struct ConfigurationKey: StorageKey {
-            typealias Value = MixpanelConfiguration
-        }
-
-        public var configuration: MixpanelConfiguration? {
-            get {
-                self.application.storage[ConfigurationKey.self]
-            }
-            nonmutating set {
-                self.application.storage[ConfigurationKey.self] = newValue
-            }
-        }
-
-        private var client: Mixpanel? {
-            guard let configuration else {
-                (request?.logger ?? application.logger).error("MixpanelVapor not configured. Use app.mixpanel.configuration = ...")
-                return nil
+    func peopleSet(distinctId: String, request: Request?, setParams: [String: any Content], params: [String: any Content]) async {
+        
+        var properties: [String: any Content] = [
+            "$distinct_id": distinctId,
+            "$token": configuration.token,
+            "$ip": "0" // do not look up the IP by default, would be the IP of the server
+        ]
+        
+        var setParams = setParams
+        
+        if let request {
+            // https://docs.mixpanel.com/docs/tracking/how-tos/effective-server-side-tracking
+            
+            if let ip = request.peerAddress?.ipAddress {
+                properties["$ip"] = ip
             }
             
-            // This should not be necessary.
-            return .init(client: request?.client ?? application.client,
-                         logger: request?.logger ?? application.logger,
-                         configuration: configuration)
+            if let userAgentHeader = request.headers[.userAgent].first {
+                let parser = UAParser(agent: userAgentHeader)
+                
+                if let browser = parser.browser?.name, setParams["$browser"] == nil {
+                    setParams["$browser"] = browser
+                }
+                
+                if let device = parser.device?.vendor, setParams["$device"] == nil {
+                    setParams["$device"] = device
+                }
+                
+                if let os = parser.os?.name, setParams["$os"] == nil {
+                    setParams["$os"] = os
+                }
+            }
         }
         
-        /// Track an event to mixpanel
-        /// - Parameters:
-        ///   - name: The name of the event
-        ///   - request: You can optionally pass request to automatically parse the ip address and user-agent header
-        ///   - params: Optional custom params assigned to the event
-        public func track(name: String, request: Request? = nil, params: [String: any Content] = [:]) async {
-            await client?.track(name: name, request: request, params: params)
+        properties["$set"] = setParams.mapValues({ AnyContent($0) })
+        
+        properties.merge(params) { _ , new in
+            new
+        }
+        
+        do {
+            let response = try await client.post(URI(string: configuration.apiUrl.absoluteString + "/engage#profile-set")) { req in
+                req.headers.contentType = .json
+                let encodableProperties: [String: AnyContent] = properties.mapValues({ .init($0) })
+                try req.content.encode([encodableProperties])
+            }
+            
+            if response.status.code >= 400 {
+                logger.error("Failed to post an event to Mixpanel", metadata: ["response": "\(response)"])
+            }
+        } catch {
+            logger.report(error: error)
+        }
+    }
+    
+    func peopleDelete(distinctId: String) async {
+        
+        let properties: [String: any Content] = [
+            "$distinct_id": distinctId,
+            "$token": configuration.token,
+            "$delete": "null"
+        ]
+
+        do {
+            let response = try await client.post(URI(string: configuration.apiUrl.absoluteString + "/engage#profile-delete")) { req in
+                req.headers.contentType = .json
+                let encodableProperties: [String: AnyContent] = properties.mapValues({ .init($0) })
+                try req.content.encode([encodableProperties])
+            }
+            
+            if response.status.code >= 400 {
+                logger.error("Failed to post an event to Mixpanel", metadata: ["response": "\(response)"])
+            }
+        } catch {
+            logger.report(error: error)
         }
     }
 }
-
-public extension Request {
-    /// Access mixpanel
-    var mixpanel: Application.MixpanelClient {
-        .init(application: application, request: self)
-    }
-}
-
