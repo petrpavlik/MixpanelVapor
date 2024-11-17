@@ -16,7 +16,7 @@ public extension Application {
         .init(application: self, request: nil)
     }
 
-    struct MixpanelClient {
+    struct MixpanelClient: Sendable {
         let application: Application
         let request: Request?
 

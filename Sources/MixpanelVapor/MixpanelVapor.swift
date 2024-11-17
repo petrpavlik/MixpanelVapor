@@ -5,12 +5,17 @@
 //  Created by Petr Pavlik on 27.12.2022.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
+
 import Vapor
 import UAParserSwift
 
 /// Auth params to configure your Mixpanel instance with
-public struct MixpanelConfiguration {
+public struct MixpanelConfiguration: Sendable {
 
     /// your project token
     public var token: String
@@ -136,6 +141,9 @@ final class Mixpanel {
                 }
             }
         }
+        
+        properties["mp_lib"] = "swift-vapor"
+        properties["$lib_version"] = "1.1.0"
         
         properties["$set"] = setParams.mapValues({ AnyContent($0) })
         

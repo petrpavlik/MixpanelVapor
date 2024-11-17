@@ -1,7 +1,7 @@
 import XCTest
 import XCTVapor
 @testable import MixpanelVapor
-import Fakery
+@preconcurrency import Fakery
 
 final class MixpanelVaporTests: XCTestCase {
     
@@ -10,10 +10,15 @@ final class MixpanelVaporTests: XCTestCase {
     static let faker = Faker()
     
     override func setUp() async throws {
-        app = Application(.testing)
+        app = try await Application.make(.testing)
         // Please don't do any funny business with this token, it's a dommy project to run unit tests against.
         let configuration = MixpanelConfiguration(token: "b939a52a74c47df96d3ffc66c5c3dcfd")
         app.mixpanel.configuration = configuration
+        try await app.asyncBoot()
+    }
+    
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
     }
     
     func testTrackAnonymousEvent() async {
