@@ -1,10 +1,3 @@
-//
-//  File.swift
-//
-//
-//  Created by Petr Pavlik on 27.12.2022.
-//
-
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -75,6 +68,9 @@ final class Mixpanel {
             }
         }
         
+        properties["mp_lib"] = Constants.libName
+        properties["$lib_version"] = Constants.libVersion
+        
         properties.merge(params) { _ , new in
             new
         }
@@ -142,8 +138,8 @@ final class Mixpanel {
             }
         }
         
-        properties["mp_lib"] = "swift-vapor"
-        properties["$lib_version"] = "1.1.0"
+        properties["mp_lib"] = Constants.libName
+        properties["$lib_version"] = Constants.libVersion
         
         properties["$set"] = setParams.mapValues({ AnyContent($0) })
         
