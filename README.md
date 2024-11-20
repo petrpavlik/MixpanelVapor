@@ -1,11 +1,10 @@
 # MixpanelVapor
 
-MixpanelVapor is a library for tracking events to Mixpanel from your Vapor server-side Swift applications.
+MixpanelVapor is a library for tracking events to Mixpanel from your [Vapor](https://vapor.codes) server-side Swift applications.
 
 ## Initialization
 
-Mixpanel recommends using a service account and their `/import` endpoint for server-side apps so that's what this package uses.
-It allows to add things like batch import of events at a large scale in the future.
+Provide your mixpanel token (the same one you'd use for client-side mixpanel tracking)
 
 ```swift
 import MixpanelVapor
@@ -42,4 +41,4 @@ await application.mixpanel.peopleDelete(distinctId: "<user id>")
 
 A list of mixpanel properties to assign a name, email, and other properties to a mixpanel identity can be found [here](https://docs.mixpanel.com/docs/data-structure/user-profiles#reserved-user-properties).
 
-I'm only implemented very basic feature set that fits my needs at this point. Will extend this package as I have the need for it, but contributions are very welcome.
+I've only implemented very basic feature set that fits my needs at this point. Will extend this package as I have the need for it, but contributions are very welcome.
