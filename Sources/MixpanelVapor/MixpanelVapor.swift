@@ -116,11 +116,17 @@ final class Mixpanel: Sendable {
         }
 
         func resetUploadInterval() {
+            if isDebug && uploadInterval != defaultUploadInterval {
+                logger.debug("reset upload interval to \(uploadInterval) seconds")
+            }
             uploadInterval = defaultUploadInterval
         }
 
         func increaseUploadInterval() {
             uploadInterval = min(maxUploadInterval, uploadInterval * 2)
+            if isDebug {
+                logger.debug("increased upload interval to \(uploadInterval) seconds")
+            }
         }
 
         func scheduleFlush(eventLoopGroup: EventLoopGroup, trigger: @escaping @Sendable () -> Void)
@@ -210,7 +216,10 @@ final class Mixpanel: Sendable {
     }
 
     private func upload(events: [Event]) async throws {
-        logger.debug("uploading \(events.count) events")
+        if isDebug {
+            logger.debug("uploading \(events.count) events")
+        }
+
         let response = try await client.post(
             URI(string: configuration.apiUrl.absoluteString + "/track")
         ) { req in
