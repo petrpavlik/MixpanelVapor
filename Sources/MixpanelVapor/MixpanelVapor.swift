@@ -17,6 +17,9 @@ public struct MixpanelConfiguration: Sendable {
     /// Allow you to point to mixpanel's EU-based servers, or a mock server. Default value is `https://api.mixpanel.com`.
     public var apiUrl = URL(string: "https://api.mixpanel.com")!
 
+    /// Set to `true` to enable debug logging
+    public var isDebug = false
+
     /// Initializes an instance of the API with the given project token.
     /// - Parameter token: your project token
     public init(token: String) {
@@ -33,7 +36,7 @@ final class Mixpanel: Sendable {
     let threadSafeProperties: ThereadSaveProperties
 
     private let eventLoopGroup: EventLoopGroup
-    private let isDebug: Bool = true
+    private let isDebug: Bool
 
     var pendingEvents: [Event] {
         get async {
@@ -250,6 +253,7 @@ final class Mixpanel: Sendable {
         self.eventLoopGroup = eventLoopGroup
         self.configuration = configuration
         self.threadSafeProperties = ThereadSaveProperties(logger: logger, isDebug: true)
+        self.isDebug = configuration.isDebug
 
         logger.info(
             "Starting mixpanel event upload every \(threadSafeProperties.defaultUploadInterval) second(s)"
