@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Petr Pavlik on 01.05.2024.
 //
@@ -17,7 +17,7 @@ struct AnyContent: Content {
     func encode(to encoder: Encoder) throws {
         try _encode(encoder)
     }
-    
+
     init(from decoder: Decoder) throws {
         fatalError("we don't need this")
     }
