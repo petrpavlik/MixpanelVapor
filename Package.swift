@@ -23,13 +23,20 @@ let package = Package(
         .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
         .package(url: "https://github.com/malcommac/UAParserSwift.git", from: "1.2.1"),
         .package(url: "https://github.com/vadymmarkov/Fakery.git", from: "5.1.0"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "MixpanelVapor",
-            dependencies: [.product(name: "Vapor", package: "vapor"), "UAParserSwift"],
+            dependencies: [
+                .product(name: "Vapor", package: "vapor"),
+                "UAParserSwift",
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
+                .product(name: "DequeModule", package: "swift-collections"),
+            ],
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency=complete")]),
         .testTarget(
             name: "MixpanelVaporTests",
