@@ -49,7 +49,7 @@ extension Application {
             }
 
             let client = Mixpanel(
-                client: application.client, eventLoopGroup: application.eventLoopGroup,
+                client: application.client,
                 configuration: configuration)
             self.application.storage[ClientKey.self] = client
             return client
