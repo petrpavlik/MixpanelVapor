@@ -82,8 +82,8 @@ final class MixpanelVaporTests: XCTestCase {
             distinctId: Self.testUserId,
             setParams: [
                 "hello": "there",
-                "$email": .string(Self.faker.name.firstName().lowercased() + "@example.com"),
-                "$name": .string(Self.faker.name.name()), "$user_id": .string(Self.testUserId),
+                .email: .string(Self.faker.name.firstName().lowercased() + "@example.com"),
+                .name: .string(Self.faker.name.name()), .userId: .string(Self.testUserId),
             ])
     }
 

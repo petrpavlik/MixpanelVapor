@@ -190,7 +190,7 @@ final class Mixpanel: Sendable {
 
     func peopleDelete(distinctId: String) async {
 
-        let properties: [String: MixpanelProperty] = [
+        let properties: [ProfilePropertyKey: MixpanelProperty] = [
             "$distinct_id": .string(distinctId),
             "$token": .string(configuration.token),
             "$delete": "null",
