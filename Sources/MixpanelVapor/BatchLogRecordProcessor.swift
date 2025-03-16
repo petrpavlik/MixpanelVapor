@@ -19,14 +19,16 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     private let maximumQueueSize: UInt = 2000
     private let maximumExportBatchSize: UInt = 512
     private let apiUrl: URL
+    private let isDebug: Bool
 
-    init(clock: Clock, logger: Logger, apiUrl: URL, httpClient: Client) {
+    init(clock: Clock, logger: Logger, apiUrl: URL, httpClient: Client, isDebug: Bool) {
         // self.exporter = exporter
         self.clock = clock
         self.httpClient = httpClient
         self.uploadInterval = self.defaultUploadInterval
         self.apiUrl = apiUrl
         self.logger = logger
+        self.isDebug = isDebug
 
         buffer = Array()  // TODO: use a better data structure for this
 
@@ -36,6 +38,10 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     private func start() async {
+
+        if isDebug {
+            logger.debug("Starting to upload events every \(defaultUploadInterval) second(s)")
+        }
 
         if isShuttingDown {
             logger.warning("Batch log processor is shutting down")
@@ -74,6 +80,9 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     private func add(event: Mixpanel.Event) async {
+        if isDebug {
+            logger.debug("Adding event to the buffer- \(event.name)")
+        }
         if isShuttingDown {
             logger.warning("Batch log processor is shutting down. Dropping log \(event.event).")
             return
@@ -87,12 +96,20 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     func flush() async {
+        if isDebug {
+            logger.debug("Manually flushing events")
+        }
         await tick()
     }
 
     private func tick() async {
 
         guard !buffer.isEmpty else {
+
+            if isDebug {
+                logger.debug("No events to upload. Scheduling next tick.")
+            }
+
             scheduleNextTick()
             return
         }
@@ -146,11 +163,20 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
                 throw Abort(.internalServerError)
             }
 
+            if isDebug {
+                logger.debug("Successfully uploaded \(eventsToSend.count) events")
+            }
+
             // success, reset the interval and schedule next upload
             uploadInterval = defaultUploadInterval
             scheduleNextTick()
 
         } catch {
+
+            if isDebug {
+                logger.debug("Failed to upload events. Retrying in \(uploadInterval) second(s)")
+            }
+
             // return the events and try again
             self.buffer.insert(contentsOf: buffer, at: 0)
             // increase the interval to avoid spamming the server and schedule next upload
@@ -160,6 +186,11 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     func shutdown() async {
+
+        if isDebug {
+            logger.debug("Shutting down batch log processor")
+        }
+
         timerTask?.cancel()
         isShuttingDown = true
         await flush()
