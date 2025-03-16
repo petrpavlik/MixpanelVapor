@@ -69,7 +69,7 @@ final class Mixpanel: Sendable {
         eventProcessor = BatchEventProcessor(
             clock: .continuous,
             logger: logger,
-            apiUrl: configuration.apiUrl, httpClient: client)
+            apiUrl: configuration.apiUrl, httpClient: client, isDebug: isDebug)
 
         // logger.info(
         //     "Starting mixpanel event upload every \(threadSafeProperties.defaultUploadInterval) second(s)"
@@ -190,7 +190,7 @@ final class Mixpanel: Sendable {
 
     func peopleDelete(distinctId: String) async {
 
-        let properties: [ProfilePropertyKey: MixpanelProperty] = [
+        let properties: [String: MixpanelProperty] = [
             "$distinct_id": .string(distinctId),
             "$token": .string(configuration.token),
             "$delete": "null",

@@ -81,7 +81,7 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
 
     private func add(event: Mixpanel.Event) async {
         if isDebug {
-            logger.debug("Adding event to the buffer- \(event.name)")
+            logger.debug("Adding event to the buffer- \(event.event)")
         }
         if isShuttingDown {
             logger.warning("Batch log processor is shutting down. Dropping log \(event.event).")

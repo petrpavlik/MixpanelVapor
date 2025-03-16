@@ -7,23 +7,6 @@
 
 import Vapor
 
-public struct ProfilePropertyKey: RawRepresentable, Hashable, Codable, Sendable {
-    public var rawValue: String
-
-    public init(rawValue: String) {
-        self.rawValue = rawValue
-    }
-
-    static let email = ProfilePropertyKey(rawValue: "$email")
-    static let firstName = ProfilePropertyKey(rawValue: "$first_name")
-    static let lastName = ProfilePropertyKey(rawValue: "$last_name")
-    static let name = ProfilePropertyKey(rawValue: "$name")
-    static let phone = ProfilePropertyKey(rawValue: "$phone")
-    static let avatar = ProfilePropertyKey(rawValue: "$avatar")
-    static let created = ProfilePropertyKey(rawValue: "$created")
-    static let userId = ProfilePropertyKey(rawValue: "$user_id")
-}
-
 public enum MixpanelProperty {
     case string(String)
     case int(Int)
