@@ -63,7 +63,7 @@ extension Application {
         ///   - params: Optional custom params assigned to the event
         public func track(
             distinctId: String?, name: String, request: Request? = nil,
-            params: [String: any Content] = [:]
+            params: [String: MixpanelProperty] = [:]
         ) async {
             await client?.track(
                 distinctId: distinctId, name: name, request: request, params: params)
@@ -76,8 +76,8 @@ extension Application {
         ///   - setParams: user properties
         ///   - params: Can be used to to set properties such as `$ip`.
         public func peopleSet(
-            distinctId: String, request: Request? = nil, setParams: [String: any Content],
-            params: [String: any Content] = [:]
+            distinctId: String, request: Request? = nil, setParams: [String: MixpanelProperty],
+            params: [String: MixpanelProperty] = [:]
         ) async {
             await client?.peopleSet(
                 distinctId: distinctId, request: request, setParams: setParams, params: params)
