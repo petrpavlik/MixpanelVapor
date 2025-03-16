@@ -29,9 +29,13 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
         self.logger = logger
 
         buffer = Array()  // TODO: use a better data structure for this
+
+        Task { [weak self] in
+            await self?.start()
+        }
     }
 
-    func start() async {
+    private func start() async {
 
         if isShuttingDown {
             logger.warning("Batch log processor is shutting down")
