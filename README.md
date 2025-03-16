@@ -29,18 +29,21 @@ request.mixpanel.track(distinctId: "<user id>", name: "my_event", params: ["$use
 request.mixpanel.track(distinctId: "<user id>", name: "my_event", request: request, params: ["$user_id": .string(profile.id), "a": 123])
 ```
 
-## New in 2.0
-- The track method is not `sync` anymore and events and periodically uploaded in batcher.
+### New in 2.0
+- The track method is not `async` anymore and events are periodically uploaded in batches.
 - You can call `await mixpanel.flush()` to trigger an immediate upload.
-- Since Vapor 4 does not support Async Service Lifecycle (Vapir 5 will), you'll need to call `await mixpanel.shutdown()` as a part of the shutdown process to make sure all pending events are uploaded before the process shuts down.
+- Since Vapor 4 does not support [Async Service Lifecycle](https://github.com/swift-server/swift-service-lifecycle) (Vapir 5 will), you'll need to call `await mixpanel.shutdown()` as a part of the shutdown process to make sure all pending events are uploaded before the process shuts down.
 ```swift
-// add example here
+// entrypoint.swift
+// .. setup and tun code ...
+await app.mixpanel.shutdown() // uploads pending events before shutdown
+try await app.asyncShutdown()
 ```
 
 
 ### Identify a user
 ```swift
-await application.mixpanel.peopleSet(distinctId: "<user id>", request: request, setParams: ["$email": "john@example.com", "num_cats": 5])
+await application.mixpanel.peopleSet(distinctId: "<user id>", request: request, setParams: ["$email": .string("john@example.com"), "num_cats": .int(5)])
 ```
 
 ### Delete a user
