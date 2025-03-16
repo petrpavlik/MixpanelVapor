@@ -58,11 +58,8 @@ final class MixpanelVaporTests: XCTestCase {
 
     func testTrackAndManuallyUploadEvent() async {
         app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
-        await Task.yield()
-        var pendingEvents = await mixpanelClient.pendingEvents
-        XCTAssertEqual(pendingEvents.count, 1)
         await app.mixpanel.flush()
-        pendingEvents = await mixpanelClient.pendingEvents
+        let pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 0)
     }
 

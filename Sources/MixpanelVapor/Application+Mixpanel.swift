@@ -55,7 +55,7 @@ extension Application {
             return client
         }
 
-        /// Track an event to mixpanel
+        /// Track an event to mixpanel. This scheudles the event to be uploaded in the background. Use `flush` to manually trigger upload.
         /// - Parameters:
         ///   - distinctId: Identifier of the user who triggered this event. Pass `nil` or an empty string to track an event that does not belong to any user.
         ///   - name: The name of the event
