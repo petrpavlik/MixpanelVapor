@@ -28,7 +28,7 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
         self.apiUrl = apiUrl
         self.logger = logger
 
-        buffer = Array() // TODO: use a better data structure for this
+        buffer = Array()  // TODO: use a better data structure for this
     }
 
     func start() async {
@@ -64,7 +64,12 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     nonisolated func track(event: Mixpanel.Event) {
+        Task {
+            await add(event: event)
+        }
+    }
 
+    private func add(event: Mixpanel.Event) async {
         if isShuttingDown {
             logger.warning("Batch log processor is shutting down. Dropping log \(event.event).")
             return
