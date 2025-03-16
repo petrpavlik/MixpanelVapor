@@ -64,8 +64,8 @@ extension Application {
         public func track(
             distinctId: String?, name: String, request: Request? = nil,
             params: [String: MixpanelProperty] = [:]
-        ) async {
-            await client?.track(
+        ) {
+            client?.track(
                 distinctId: distinctId, name: name, request: request, params: params)
         }
 

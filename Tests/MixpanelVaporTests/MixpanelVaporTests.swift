@@ -28,13 +28,15 @@ final class MixpanelVaporTests: XCTestCase {
     }
 
     func testTrackAnonymousEvent() async {
-        await app.mixpanel.track(distinctId: nil, name: "test_event_empty_distinct_id")
+        app.mixpanel.track(distinctId: nil, name: "test_event_empty_distinct_id")
+        await Task.yield()
         let pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 1)
     }
 
     func testTrackEvent() async {
-        await app.mixpanel.track(distinctId: Self.testUserId, name: "test_event")
+        app.mixpanel.track(distinctId: Self.testUserId, name: "test_event")
+        await Task.yield()
         let pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 1)
     }
@@ -43,7 +45,7 @@ final class MixpanelVaporTests: XCTestCase {
 
         app.get("trackEvent") { req async throws in
 
-            await req.mixpanel.track(
+            req.mixpanel.track(
                 distinctId: Self.testUserId, name: "test_event_with_request_metadata", request: req)
 
             return "ok"
@@ -55,7 +57,8 @@ final class MixpanelVaporTests: XCTestCase {
     }
 
     func testTrackAndManuallyUploadEvent() async {
-        await app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        await Task.yield()
         var pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 1)
         await app.mixpanel.flush()
@@ -64,7 +67,8 @@ final class MixpanelVaporTests: XCTestCase {
     }
 
     func testTrackAndAutomaticallyUploadEvent() async throws {
-        await app.mixpanel.track(distinctId: nil, name: "test_event_scheduled_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_scheduled_upload")
+        await Task.yield()
         var pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 1)
         try await Task.sleep(for: .milliseconds(500))
@@ -81,8 +85,8 @@ final class MixpanelVaporTests: XCTestCase {
             distinctId: Self.testUserId,
             setParams: [
                 "hello": "there",
-                "$email": Self.faker.name.firstName().lowercased() + "@example.com",
-                "$name": Self.faker.name.name(), "$user_id": Self.testUserId,
+                "$email": .string(Self.faker.name.firstName().lowercased() + "@example.com"),
+                "$name": .string(Self.faker.name.name()), "$user_id": .string(Self.testUserId),
             ])
     }
 
