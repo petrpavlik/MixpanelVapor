@@ -72,6 +72,7 @@ final class MixpanelVaporTests: XCTestCase {
         pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 1)
         try await Task.sleep(for: .milliseconds(500))
+        try await Task.sleep(for: .milliseconds(100))
         pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 0)
     }
