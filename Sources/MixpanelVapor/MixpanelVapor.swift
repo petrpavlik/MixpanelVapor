@@ -75,10 +75,6 @@ final class Mixpanel: Sendable {
             clock: .continuous,
             logger: logger,
             apiUrl: configuration.apiUrl, httpClient: client, isDebug: isDebug)
-
-        // logger.info(
-        //     "Starting mixpanel event upload every \(threadSafeProperties.defaultUploadInterval) second(s)"
-        // )
     }
 
     // MARK: - Events

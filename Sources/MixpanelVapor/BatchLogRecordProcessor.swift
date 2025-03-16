@@ -188,7 +188,11 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     func shutdown() async {
 
         if isDebug {
-            logger.debug("Shutting down batch log processor")
+            if buffer.isEmpty {
+                logger.debug("Shutting down batch log processor")
+            } else {
+                logger.debug("Shutting down batch log processor. Flushing \(buffer.count) events.")
+            }
         }
 
         timerTask?.cancel()
