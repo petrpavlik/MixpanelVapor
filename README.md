@@ -22,12 +22,21 @@ public func configure(_ app: Application) throws {
 
 ### Log an event
 ```swift
-await application.mixpanel.track(distinctId: "<user id>", name: "my_event", params: ["$user_id": profile.id, "a": 123])
-await request.mixpanel.track(distinctId: "<user id>", name: "my_event", params: ["$user_id": profile.id, "a": 123])
+application.mixpanel.track(distinctId: "<user id>", name: "my_event", params: ["$user_id": .string(profile.id), "a": 123])
+request.mixpanel.track(distinctId: "<user id>", name: "my_event", params: ["$user_id": .string(profile.id), "a": 123])
 
 // enhances the metadata (user agent, country, ...) by parsing the headers and ip from the request
-await request.mixpanel.track(distinctId: "<user id>", name: "my_event", request: request, params: ["$user_id": profile.id, "a": 123])
+request.mixpanel.track(distinctId: "<user id>", name: "my_event", request: request, params: ["$user_id": .string(profile.id), "a": 123])
 ```
+
+## New in 2.0
+- The track method is not `sync` anymore and events and periodically uploaded in batcher.
+- You can call `await mixpanel.flush()` to trigger an immediate upload.
+- Since Vapor 4 does not support Async Service Lifecycle (Vapir 5 will), you'll need to call `await mixpanel.shutdown()` as a part of the shutdown process to make sure all pending events are uploaded before the process shuts down.
+```swift
+// add example here
+```
+
 
 ### Identify a user
 ```swift
