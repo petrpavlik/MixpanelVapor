@@ -28,7 +28,7 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
         self.apiUrl = apiUrl
         self.logger = logger
 
-        buffer = Array()
+        buffer = Array() // TODO: use a better data structure for this
     }
 
     func start() async {
@@ -63,7 +63,7 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
         }
     }
 
-    func track(event: Mixpanel.Event) async {
+    nonisolated func track(event: Mixpanel.Event) {
 
         if isShuttingDown {
             logger.warning("Batch log processor is shutting down. Dropping log \(event.event).")
@@ -101,14 +101,16 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
 
             // We throw only in a case where it makes sense to return the events to the buffer and try again
 
+            let eventsToSend = Array(buffer)
+            let logger = self.logger
+
             let response = try await httpClient.post(
                 URI(string: apiUrl.absoluteString + "/track")
             ) { req in
-
                 req.headers.contentType = .json
 
                 do {
-                    try req.content.encode(Array(buffer))
+                    try req.content.encode(eventsToSend)
                 } catch {
                     // There's not point trying this again, the events are lost, log the error and move on
                     logger.error("Failed to encode events to JSON", metadata: ["error": "\(error)"])

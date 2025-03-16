@@ -1,4 +1,3 @@
-import NIOCore
 import UAParserSwift
 import Vapor
 
@@ -45,13 +44,11 @@ final class Mixpanel: Sendable {
 
     struct Event: Content {
         var event: String
-        var properties: [String: AnyContent]
+        var properties: [String: MixpanelProperty]
 
-        init(event: String, properties: [String: any Content]) {
+        init(event: String, properties: [String: MixpanelProperty]) {
             self.event = event
-            self.properties = properties.mapValues({ value in
-                AnyContent(value)
-            })
+            self.properties = properties
         }
     }
 
@@ -81,61 +78,61 @@ final class Mixpanel: Sendable {
 
     // MARK: - Events
 
-    func track(distinctId: String?, name: String, request: Request?, params: [String: any Content])
-        async
-    {
-        var properties: [String: any Content] = [
-            "time": Int(Date().timeIntervalSince1970 * 1000),
-            "$insert_id": UUID().uuidString,
-            "distinct_id": distinctId ?? "",
-            "token": configuration.token,
+    func track(
+        distinctId: String?, name: String, request: Request?, params: [String: MixpanelProperty]
+    ) {
+        var properties: [String: MixpanelProperty] = [
+            "time": .int(Int(Date().timeIntervalSince1970 * 1000)),
+            "$insert_id": .string(UUID().uuidString),
+            "distinct_id": .string(distinctId ?? ""),
+            "token": .string(configuration.token),
         ]
 
         if let request {
             // https://docs.mixpanel.com/docs/tracking/how-tos/effective-server-side-tracking
 
             if let ip = request.peerAddress?.ipAddress {
-                properties["ip"] = ip
+                properties["ip"] = .string(ip)
             }
 
             if let userAgentHeader = request.headers[.userAgent].first {
                 let parser = UAParser(agent: userAgentHeader)
 
                 if let browser = parser.browser?.name {
-                    properties["$browser"] = browser
+                    properties["$browser"] = .string(browser)
                 }
 
                 if let device = parser.device?.vendor {
-                    properties["$device"] = device
+                    properties["$device"] = .string(device)
                 }
 
                 if let os = parser.os?.name {
-                    properties["$os"] = os
+                    properties["$os"] = .string(os)
                 }
             }
         }
 
-        properties["mp_lib"] = Constants.libName
-        properties["$lib_version"] = Constants.libVersion
+        properties["mp_lib"] = .string(Constants.libName)
+        properties["$lib_version"] = .string(Constants.libVersion)
 
         properties.merge(params) { _, new in
             new
         }
 
         let event = Event(event: name, properties: properties)
-        await eventProcessor.track(event: event)
+        eventProcessor.track(event: event)
     }
 
     // MARK: - People
 
     func peopleSet(
-        distinctId: String, request: Request?, setParams: [String: any Content],
-        params: [String: any Content]
+        distinctId: String, request: Request?, setParams: [String: MixpanelProperty],
+        params: [String: MixpanelProperty]
     ) async {
 
-        var properties: [String: any Content] = [
-            "$distinct_id": distinctId,
-            "$token": configuration.token,
+        var properties: [String: MixpanelProperty] = [
+            "$distinct_id": .string(distinctId),
+            "$token": .string(configuration.token),
             "$ip": "0",  // do not look up the IP by default, would be the IP of the server
         ]
 
@@ -145,30 +142,30 @@ final class Mixpanel: Sendable {
             // https://docs.mixpanel.com/docs/tracking/how-tos/effective-server-side-tracking
 
             if let ip = request.peerAddress?.ipAddress {
-                properties["$ip"] = ip
+                properties["$ip"] = .string(ip)
             }
 
             if let userAgentHeader = request.headers[.userAgent].first {
                 let parser = UAParser(agent: userAgentHeader)
 
                 if let browser = parser.browser?.name, setParams["$browser"] == nil {
-                    setParams["$browser"] = browser
+                    setParams["$browser"] = .string(browser)
                 }
 
                 if let device = parser.device?.vendor, setParams["$device"] == nil {
-                    setParams["$device"] = device
+                    setParams["$device"] = .string(device)
                 }
 
                 if let os = parser.os?.name, setParams["$os"] == nil {
-                    setParams["$os"] = os
+                    setParams["$os"] = .string(os)
                 }
             }
         }
 
-        properties["mp_lib"] = Constants.libName
-        properties["$lib_version"] = Constants.libVersion
+        properties["mp_lib"] = .string(Constants.libName)
+        properties["$lib_version"] = .string(Constants.libVersion)
 
-        properties["$set"] = setParams.mapValues({ AnyContent($0) })
+        properties["$set"] = .dictionary(setParams)
 
         properties.merge(params) { _, new in
             new
@@ -179,8 +176,7 @@ final class Mixpanel: Sendable {
                 URI(string: configuration.apiUrl.absoluteString + "/engage#profile-set")
             ) { req in
                 req.headers.contentType = .json
-                let encodableProperties: [String: AnyContent] = properties.mapValues({ .init($0) })
-                try req.content.encode([encodableProperties])
+                try req.content.encode([properties])
             }
 
             if response.status.code >= 400 {
@@ -194,9 +190,9 @@ final class Mixpanel: Sendable {
 
     func peopleDelete(distinctId: String) async {
 
-        let properties: [String: any Content] = [
-            "$distinct_id": distinctId,
-            "$token": configuration.token,
+        let properties: [String: MixpanelProperty] = [
+            "$distinct_id": .string(distinctId),
+            "$token": .string(configuration.token),
             "$delete": "null",
         ]
 
@@ -205,8 +201,7 @@ final class Mixpanel: Sendable {
                 URI(string: configuration.apiUrl.absoluteString + "/engage#profile-delete")
             ) { req in
                 req.headers.contentType = .json
-                let encodableProperties: [String: AnyContent] = properties.mapValues({ .init($0) })
-                try req.content.encode([encodableProperties])
+                try req.content.encode([properties])
             }
 
             if response.status.code >= 400 {
