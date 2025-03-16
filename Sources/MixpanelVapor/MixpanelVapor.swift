@@ -62,9 +62,14 @@ final class Mixpanel: Sendable {
 
     init(client: Client, configuration: MixpanelConfiguration) {
         self.client = client
-        self.logger = Logger(label: "Mixpanel")
         self.configuration = configuration
         self.isDebug = configuration.isDebug
+
+        var logger = Logger(label: "Mixpanel")
+        if configuration.isDebug {
+            logger.logLevel = .debug
+        }
+        self.logger = logger
 
         eventProcessor = BatchEventProcessor(
             clock: .continuous,
