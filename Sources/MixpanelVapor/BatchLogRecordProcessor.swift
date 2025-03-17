@@ -20,6 +20,8 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     private let apiUrl: URL
     private let isDebug: Bool
 
+    private var numRunningUploads = 0
+
     init(clock: Clock, logger: Logger, apiUrl: URL, httpClient: Client, isDebug: Bool) {
         // self.exporter = exporter
         self.clock = clock
@@ -101,6 +103,11 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     private func tick() async {
+
+        numRunningUploads += 1
+        defer {
+            numRunningUploads -= 1
+        }
 
         guard !buffer.isEmpty else {
 
@@ -196,5 +203,20 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
         timerTask?.cancel()
         isShuttingDown = true
         await flush()
+
+        while numRunningUploads > 0 {
+            if isDebug {
+                logger.debug("Waiting for \(numRunningUploads) uploads to finish")
+            }
+            do {
+                try await Task.sleep(for: .milliseconds(10))
+            } catch {
+                logger.error("Failed to finish all uploads \(error)")
+            }
+        }
+
+        if isDebug {
+            logger.debug("All uploads finished.")
+        }
     }
 }
