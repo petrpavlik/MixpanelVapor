@@ -59,7 +59,6 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
         timerTask?.cancel()
 
         if isShuttingDown {
-            logger.warning("Batch log processor is shutting down.")
             return
         }
 

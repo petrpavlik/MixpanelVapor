@@ -43,7 +43,7 @@ extension Application {
             }
 
             guard let configuration else {
-                (application.logger).error(
+                (application.logger).warning(
                     "MixpanelVapor not configured. Use app.mixpanel.configuration = ...")
                 return nil
             }
