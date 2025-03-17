@@ -59,3 +59,4 @@ I've only implemented very basic feature set that fits my needs at this point. W
 - Implement [Async Service Lifecycle](https://github.com/swift-server/swift-service-lifecycle) and deprecate `shutdown()` method
 - Swift 6 (possibly 6.1 or even 6.2) only
 - Requires Vapor 5
+- Move from XCTest to Swift testing
