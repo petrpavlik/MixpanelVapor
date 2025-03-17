@@ -91,4 +91,10 @@ final class MixpanelVaporTests: XCTestCase {
     func testDeleteUser() async throws {
         await app.mixpanel.peopleDelete(distinctId: Self.testUserId)
     }
+
+    func testx() {
+        var props = [String: MixpanelProperty]()
+        let str = "hello"
+        props["hello"] = str
+    }
 }

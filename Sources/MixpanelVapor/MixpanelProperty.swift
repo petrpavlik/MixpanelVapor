@@ -67,6 +67,12 @@ extension MixpanelProperty: ExpressibleByStringLiteral {
     }
 }
 
+extension MixpanelProperty: ExpressibleByStringInterpolation {
+    public init(stringInterpolation: DefaultStringInterpolation) {
+        self = .string(String(stringInterpolation: stringInterpolation))
+    }
+}
+
 extension MixpanelProperty: ExpressibleByIntegerLiteral {
     public init(integerLiteral value: IntegerLiteralType) {
         self = .int(value)
