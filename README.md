@@ -54,3 +54,8 @@ await application.mixpanel.peopleDelete(distinctId: "<user id>")
 A list of mixpanel properties to assign a name, email, and other properties to a mixpanel identity can be found [here](https://docs.mixpanel.com/docs/data-structure/user-profiles#reserved-user-properties).
 
 I've only implemented very basic feature set that fits my needs at this point. Will extend this package as I have the need for it, but contributions are very welcome.
+
+## Plans for V3
+- Implement [Async Service Lifecycle](https://github.com/swift-server/swift-service-lifecycle) and deprecate `shutdown()` method
+- Swift 6 (possibly 6.1 or even 6.2) only
+- Requires Vapor 5
