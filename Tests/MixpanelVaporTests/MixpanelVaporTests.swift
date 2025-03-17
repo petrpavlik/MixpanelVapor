@@ -59,6 +59,7 @@ final class MixpanelVaporTests: XCTestCase {
     func testTrackAndManuallyUploadEvent() async {
         app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
         await app.mixpanel.flush()
+        await Task.yield()  // FIXME: is this going to prevent the CI on GH from failing?
         let pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 0)
     }
