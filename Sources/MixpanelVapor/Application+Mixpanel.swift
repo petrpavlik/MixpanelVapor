@@ -55,14 +55,14 @@ extension Application {
             return client
         }
 
-        /// Track an event to mixpanel. This scheudles the event to be uploaded in the background. Use `flush` to manually trigger upload.
+        /// Track an event to mixpanel. This scheudles the event to be uploaded in the background. Use `await flush()` to manually trigger upload.
         /// - Parameters:
         ///   - distinctId: Identifier of the user who triggered this event. Pass `nil` or an empty string to track an event that does not belong to any user.
         ///   - name: The name of the event
         ///   - request: You can optionally pass request to automatically parse the ip address and user-agent header
         ///   - params: Optional custom params assigned to the event
         public func track(
-            distinctId: String?, name: String, request: Request? = nil,
+            distinctId: String? = nil, name: String, request: Request? = nil,
             params: [String: MixpanelProperty] = [:]
         ) {
             client?.track(

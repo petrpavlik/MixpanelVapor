@@ -100,6 +100,5 @@ final class MixpanelVaporTests: XCTestCase {
         props["number"] = 1
         props["bool"] = true
         props["date"] = .date(.now)
-
     }
 }

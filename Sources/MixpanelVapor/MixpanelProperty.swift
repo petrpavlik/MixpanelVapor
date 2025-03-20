@@ -7,13 +7,37 @@
 
 import Vapor
 
+/// Represents a property value that can be sent to Mixpanel.
+///
+/// This enum encapsulates different types of values that are supported by Mixpanel's tracking API:
+/// - String values
+/// - Integer values
+/// - Double/Float values
+/// - Boolean values
+/// - Date values
+/// - Arrays of MixpanelProperty
+/// - Dictionaries with String keys and MixpanelProperty values
+///
+/// Example:
+/// ```swift
+/// let stringProperty = MixpanelProperty.string("value")
+/// let numberProperty = MixpanelProperty.int(42)
+/// let nestedProperty = MixpanelProperty.dictionary(["key": .string("value")])
+/// ```
 public enum MixpanelProperty {
+    /// A string value.
     case string(String)
+    /// An integer value.
     case int(Int)
+    /// A double value.
     case double(Double)
+    /// A boolean value.
     case bool(Bool)
+    /// A date value.
     case date(Date)
+    /// An array of MixpanelProperty values.
     case array([MixpanelProperty])
+    /// A dictionary with String keys and MixpanelProperty values.
     case dictionary([String: MixpanelProperty])
 }
 
@@ -57,6 +81,27 @@ extension MixpanelProperty: Content {
         } else {
             throw DecodingError.dataCorruptedError(
                 in: container, debugDescription: "Invalid mixpanel property")
+        }
+    }
+}
+
+extension MixpanelProperty: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .string(let value):
+            return value
+        case .int(let value):
+            return String(value)
+        case .double(let value):
+            return String(value)
+        case .bool(let value):
+            return String(value)
+        case .date(let value):
+            return String(describing: value)
+        case .array(let value):
+            return String(describing: value)
+        case .dictionary(let value):
+            return String(describing: value)
         }
     }
 }
