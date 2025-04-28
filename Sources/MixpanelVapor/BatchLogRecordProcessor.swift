@@ -96,8 +96,13 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     func flush() async {
+        // track() is a nonisolated function that internally schedules a task to add the event to the buffer on this actor
+        // this is a workaround to let the task finish before flushing.
+        // FIXME: this helps a lot, but still not 100% reliable.
+        await Task.yield()
+
         if isDebug {
-            logger.debug("Manually flushing events")
+            logger.debug("Manually flushin \(buffer.count) events")
         }
         await tick()
     }

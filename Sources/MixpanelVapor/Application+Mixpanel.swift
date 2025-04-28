@@ -51,7 +51,9 @@ extension Application {
             let client = Mixpanel(
                 client: application.client,
                 configuration: configuration)
-            self.application.storage[ClientKey.self] = client
+            application.storage[ClientKey.self] = client
+            application.lifecycle.use(MixpanelLifecycleHandler(mixpanel: client))
+            application.logger.debug("Mixpanel client initialized")
             return client
         }
 
@@ -97,8 +99,16 @@ extension Application {
         }
 
         /// Blocks the shutdown process until all pending events are uploaded. Triggers a flush if there's any pending events.
+        ///
+        /// > Warning: This method is deprecated and does nothing.
+        /// >
+        /// > Shutting down is now handled automatically by the lifecycle handler.
+        /// > You no longer need to call this method during application shutdown.
+        @available(
+            *, deprecated, message: "This is now handled automatically by the lifecycle handler"
+        )
         public func shutdown() async {
-            await client?.shutdown()
+            // This is now handled by the lifecycle handler and this method is a no-op and deprecated
         }
     }
 }

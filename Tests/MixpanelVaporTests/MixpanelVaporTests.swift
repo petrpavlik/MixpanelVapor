@@ -13,18 +13,20 @@ final class MixpanelVaporTests: XCTestCase {
 
     override func setUp() async throws {
         app = try await Application.make(.testing)
+        app.logger.logLevel = .debug
         // Please don't do any funny business with this token, it's a dummy project to run unit tests against.
-        let configuration = MixpanelConfiguration(token: "b939a52a74c47df96d3ffc66c5c3dcfd")
+        var configuration = MixpanelConfiguration(
+            token: "b939a52a74c47df96d3ffc66c5c3dcfd")
+        configuration.isDebug = true
         app.mixpanel.configuration = configuration
         try await app.asyncBoot()
         mixpanelClient = app.mixpanel.client!
     }
 
     override func tearDown() async throws {
-        await app.mixpanel.shutdown()
+        try await app.asyncShutdown()
         let pendingEvents = await mixpanelClient.pendingEvents
         XCTAssertEqual(pendingEvents.count, 0)
-        try await app.asyncShutdown()
     }
 
     func testTrackAnonymousEvent() async {
@@ -57,6 +59,15 @@ final class MixpanelVaporTests: XCTestCase {
     }
 
     func testTrackAndManuallyUploadEvent() async {
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
+        app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
         app.mixpanel.track(distinctId: nil, name: "test_event_manual_upload")
         await app.mixpanel.flush()
         let pendingEvents = await mixpanelClient.pendingEvents
