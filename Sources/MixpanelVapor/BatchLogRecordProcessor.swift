@@ -1,3 +1,4 @@
+import Atomics
 import Logging
 import Vapor
 
@@ -21,6 +22,8 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     private let isDebug: Bool
 
     private var numRunningUploads = 0
+
+    private let pendingAddEventTasksCounter = ManagedAtomic<Int>(0)
 
     init(clock: Clock, logger: Logger, apiUrl: URL, httpClient: Client, isDebug: Bool) {
         // self.exporter = exporter
@@ -74,8 +77,10 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     nonisolated func track(event: Mixpanel.Event) {
+        pendingAddEventTasksCounter.wrappingIncrement(ordering: .relaxed)
         Task {
             await add(event: event)
+            pendingAddEventTasksCounter.wrappingDecrement(ordering: .relaxed)
         }
     }
 
@@ -96,10 +101,29 @@ actor BatchEventProcessor<Clock: _Concurrency.Clock> where Clock.Duration == Dur
     }
 
     func flush() async {
+
+        var numYielded = 0
+        let maxYields = 5
+
         // track() is a nonisolated function that internally schedules a task to add the event to the buffer on this actor
         // this is a workaround to let the task finish before flushing.
-        // FIXME: this helps a lot, but still not 100% reliable.
-        await Task.yield()
+        //
+        // In case there's some obscure client logic that keeps adding events one after another, we give up after 5 yields
+        // to avoid getting stuck.
+        while pendingAddEventTasksCounter.load(ordering: .relaxed) > 0 && numYielded < maxYields {
+            if isDebug {
+                logger.debug(
+                    "Waiting for \(pendingAddEventTasksCounter.load(ordering: .relaxed)) events to be added to the buffer"
+                )
+            }
+            await Task.yield()
+            numYielded += 1
+
+            if numYielded >= maxYields {
+                logger.error("Timed out waiting for events to be added to the buffer")
+                break
+            }
+        }
 
         if isDebug {
             logger.debug("Manually flushin \(buffer.count) events")
