@@ -32,13 +32,7 @@ request.mixpanel.track(distinctId: "<user id>", name: "my_event", request: reque
 ### New in 2.0
 - The track method is not `async` anymore and events are periodically uploaded in batches.
 - You can call `await mixpanel.flush()` to trigger an immediate upload.
-- Since Vapor 4 does not support [Async Service Lifecycle](https://github.com/swift-server/swift-service-lifecycle) (Vapor 5 will), you'll need to call `await mixpanel.shutdown()` as a part of the shutdown process to make sure all pending events are uploaded before the process shuts down.
-```swift
-// entrypoint.swift
-// .. setup and tun code ...
-await app.mixpanel.shutdown() // uploads pending events before shutdown
-try await app.asyncShutdown()
-```
+- All pending events will be automatically uploaded as a part of the shut down flow.
 
 
 ### Identify a user
