@@ -54,3 +54,4 @@ I've only implemented very basic feature set that fits my needs at this point. W
 - Swift 6 (possibly 6.1 or even 6.2) only
 - Requires Vapor 5
 - Move from XCTest to Swift testing
+- Drop dependency on Swift Atomics package
